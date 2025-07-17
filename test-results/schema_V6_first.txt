@@ -1,0 +1,478 @@
+Table: city
+Columns:
+  city_id: integer  DEFAULT nextval('city_city_id_seq'::regclass)
+  name: character varying  
+  region_id: integer  
+  latitude: numeric  
+  longitude: numeric  
+
+Constraints:
+  city_name_region_id_key: UNIQUE (name, region_id)
+  city_pkey: PRIMARY KEY (city_id)
+  city_region_id_fkey: FOREIGN KEY (region_id) REFERENCES region(region_id)
+
+Indexes:
+  city_pkey: CREATE UNIQUE INDEX city_pkey ON public.city USING btree (city_id)
+  city_name_region_id_key: CREATE UNIQUE INDEX city_name_region_id_key ON public.city USING btree (name, region_id)
+
+==================================================
+
+Table: country
+Columns:
+  country_id: integer  DEFAULT nextval('country_country_id_seq'::regclass)
+  country_name: character varying  
+
+Constraints:
+  country_country_name_key: UNIQUE (country_name)
+  country_pkey: PRIMARY KEY (country_id)
+
+Indexes:
+  country_pkey: CREATE UNIQUE INDEX country_pkey ON public.country USING btree (country_id)
+  country_country_name_key: CREATE UNIQUE INDEX country_country_name_key ON public.country USING btree (country_name)
+
+==================================================
+
+Table: employee
+Columns:
+  employee_id: integer  DEFAULT nextval('employee_employee_id_seq'::regclass)
+  first_name: character varying  
+  last_name: character varying  
+  patronymic: character varying NULL 
+  role: character varying  
+  email: character varying  
+  phone: character varying  
+
+Constraints:
+  employee_email_key: UNIQUE (email)
+  employee_first_name_last_name_patronymic_email_key: UNIQUE (first_name, last_name, patronymic, email)
+  employee_pkey: PRIMARY KEY (employee_id)
+  employee_role_check: CHECK (((role)::text = ANY ((ARRAY['Administrator'::character varying, 'Technician'::character varying, 'Meteorologist'::character varying])::text[])))
+
+Indexes:
+  employee_pkey: CREATE UNIQUE INDEX employee_pkey ON public.employee USING btree (employee_id)
+  employee_email_key: CREATE UNIQUE INDEX employee_email_key ON public.employee USING btree (email)
+  employee_first_name_last_name_patronymic_email_key: CREATE UNIQUE INDEX employee_first_name_last_name_patronymic_email_key ON public.employee USING btree (first_name, last_name, patronymic, email)
+
+==================================================
+
+Table: externaldatasource
+Columns:
+  source_id: integer  DEFAULT nextval('externaldatasource_source_id_seq'::regclass)
+  name: character varying  
+  api_url: text  
+  last_fetched: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+
+Constraints:
+  externaldatasource_name_key: UNIQUE (name)
+  externaldatasource_pkey: PRIMARY KEY (source_id)
+
+Indexes:
+  externaldatasource_pkey: CREATE UNIQUE INDEX externaldatasource_pkey ON public.externaldatasource USING btree (source_id)
+  externaldatasource_name_key: CREATE UNIQUE INDEX externaldatasource_name_key ON public.externaldatasource USING btree (name)
+
+==================================================
+
+Table: externalweatherdata
+Columns:
+  external_data_id: integer  DEFAULT nextval('externalweatherdata_external_data_id_seq'::regclass)
+  source_id: integer  
+  station_id: integer NULL 
+  city_id: integer NULL 
+  timestamp: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+  data_type: character varying  
+  data_payload: json  
+
+Constraints:
+  externalweatherdata_city_id_fkey: FOREIGN KEY (city_id) REFERENCES city(city_id)
+  externalweatherdata_data_type_check: CHECK (((data_type)::text = ANY ((ARRAY['Satellite Image'::character varying, 'Storm Alert'::character varying, 'Temperature Anomaly'::character varying, 'Earthquake'::character varying, 'Wildfire'::character varying, 'Flood'::character varying])::text[])))
+  externalweatherdata_pkey: PRIMARY KEY (external_data_id)
+  externalweatherdata_source_id_fkey: FOREIGN KEY (source_id) REFERENCES externaldatasource(source_id)
+  externalweatherdata_source_id_station_id_city_id_timestamp_key: UNIQUE (source_id, station_id, city_id, "timestamp")
+  externalweatherdata_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+
+Indexes:
+  externalweatherdata_pkey: CREATE UNIQUE INDEX externalweatherdata_pkey ON public.externalweatherdata USING btree (external_data_id)
+  externalweatherdata_source_id_station_id_city_id_timestamp_key: CREATE UNIQUE INDEX externalweatherdata_source_id_station_id_city_id_timestamp_key ON public.externalweatherdata USING btree (source_id, station_id, city_id, "timestamp")
+
+==================================================
+
+Table: healthrisklevel
+Columns:
+  parameter: character varying  
+  level: character varying  
+  recommendation: text  
+
+Constraints:
+  healthrisklevel_level_check: CHECK (((level)::text = ANY ((ARRAY['No Activity'::character varying, 'Low'::character varying, 'Moderate'::character varying, 'High'::character varying, 'Very High'::character varying, 'Extremely High'::character varying, 'Calm'::character varying, 'Mild Storm'::character varying, 'Moderate Storm'::character varying, 'Severe Storm'::character varying, 'Very Severe Storm'::character varying, 'Extremely Severe Storm'::character varying])::text[])))
+  healthrisklevel_parameter_check: CHECK (((parameter)::text = ANY ((ARRAY['UV Index'::character varying, 'Pollen Concentration'::character varying, 'Geomagnetic Activity'::character varying, 'AQI'::character varying])::text[])))
+  healthrisklevel_pkey: PRIMARY KEY (parameter, level)
+
+Indexes:
+  healthrisklevel_pkey: CREATE UNIQUE INDEX healthrisklevel_pkey ON public.healthrisklevel USING btree (parameter, level)
+
+==================================================
+
+Table: monthlyweatherstatistics
+Columns:
+  statistics_id: integer  DEFAULT nextval('monthlyweatherstatistics_statistics_id_seq'::regclass)
+  station_id: integer  
+  month: integer  
+  year: integer  
+  avg_day_temperature: numeric  
+  avg_night_temperature: numeric  
+  avg_humidity: numeric  
+  avg_pressure: numeric  
+  avg_wind_speed: numeric  
+  total_precipitation: numeric  
+  clear_days: integer  
+  rainy_days: integer  
+  cloudy_days: integer  
+
+Constraints:
+  monthlyweatherstatistics_clear_days_check: CHECK ((clear_days >= 0))
+  monthlyweatherstatistics_cloudy_days_check: CHECK ((cloudy_days >= 0))
+  monthlyweatherstatistics_month_check: CHECK (((month >= 1) AND (month <= 12)))
+  monthlyweatherstatistics_pkey: PRIMARY KEY (statistics_id)
+  monthlyweatherstatistics_rainy_days_check: CHECK ((rainy_days >= 0))
+  monthlyweatherstatistics_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  monthlyweatherstatistics_station_id_month_year_key: UNIQUE (station_id, month, year)
+  monthlyweatherstatistics_year_check: CHECK ((year >= 2000))
+
+Indexes:
+  monthlyweatherstatistics_pkey: CREATE UNIQUE INDEX monthlyweatherstatistics_pkey ON public.monthlyweatherstatistics USING btree (statistics_id)
+  monthlyweatherstatistics_station_id_month_year_key: CREATE UNIQUE INDEX monthlyweatherstatistics_station_id_month_year_key ON public.monthlyweatherstatistics USING btree (station_id, month, year)
+
+==================================================
+
+Table: notification
+Columns:
+  notification_id: integer  DEFAULT nextval('notification_notification_id_seq'::regclass)
+  user_id: integer  
+  type: character varying  
+  message: text  
+  sent_at: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+
+Constraints:
+  notification_pkey: PRIMARY KEY (notification_id)
+  notification_type_check: CHECK (((type)::text = ANY ((ARRAY['Email'::character varying, 'SMS'::character varying, 'Push'::character varying])::text[])))
+  notification_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+
+Indexes:
+  notification_pkey: CREATE UNIQUE INDEX notification_pkey ON public.notification USING btree (notification_id)
+
+==================================================
+
+Table: pollenmeasurement
+Columns:
+  pollen_id: integer  DEFAULT nextval('pollenmeasurement_pollen_id_seq'::regclass)
+  measurement_id: integer  
+  plant_name: character varying  
+  pollen_concentration: numeric  
+
+Constraints:
+  pollenmeasurement_measurement_id_fkey: FOREIGN KEY (measurement_id) REFERENCES weathermeasurement(measurement_id)
+  pollenmeasurement_measurement_id_plant_name_key: UNIQUE (measurement_id, plant_name)
+  pollenmeasurement_pkey: PRIMARY KEY (pollen_id)
+
+Indexes:
+  pollenmeasurement_pkey: CREATE UNIQUE INDEX pollenmeasurement_pkey ON public.pollenmeasurement USING btree (pollen_id)
+  pollenmeasurement_measurement_id_plant_name_key: CREATE UNIQUE INDEX pollenmeasurement_measurement_id_plant_name_key ON public.pollenmeasurement USING btree (measurement_id, plant_name)
+
+==================================================
+
+Table: region
+Columns:
+  region_id: integer  DEFAULT nextval('region_region_id_seq'::regclass)
+  region_name: character varying  
+  country_id: integer  
+
+Constraints:
+  region_country_id_fkey: FOREIGN KEY (country_id) REFERENCES country(country_id)
+  region_pkey: PRIMARY KEY (region_id)
+  region_region_name_key: UNIQUE (region_name)
+
+Indexes:
+  region_pkey: CREATE UNIQUE INDEX region_pkey ON public.region USING btree (region_id)
+  region_region_name_key: CREATE UNIQUE INDEX region_region_name_key ON public.region USING btree (region_name)
+
+==================================================
+
+Table: sensor
+Columns:
+  sensor_id: integer  DEFAULT nextval('sensor_sensor_id_seq'::regclass)
+  station_id: integer  
+  type: character varying  
+  model: character varying  
+  last_calibration: date NULL 
+  status: character varying  
+
+Constraints:
+  sensor_pkey: PRIMARY KEY (sensor_id)
+  sensor_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  sensor_station_id_type_model_key: UNIQUE (station_id, type, model)
+  sensor_status_check: CHECK (((status)::text = ANY ((ARRAY['Operational'::character varying, 'Faulty'::character varying, 'Maintenance Required'::character varying])::text[])))
+
+Indexes:
+  sensor_pkey: CREATE UNIQUE INDEX sensor_pkey ON public.sensor USING btree (sensor_id)
+  sensor_station_id_type_model_key: CREATE UNIQUE INDEX sensor_station_id_type_model_key ON public.sensor USING btree (station_id, type, model)
+
+==================================================
+
+Table: sensorcalibrationhistory
+Columns:
+  calibration_id: integer  DEFAULT nextval('sensorcalibrationhistory_calibration_id_seq'::regclass)
+  sensor_id: integer  
+  calibration_timestamp: timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP
+  technician_id: integer  
+  calibration_result: character varying  
+  notes: text  
+
+Constraints:
+  sensorcalibrationhistory_calibration_result_check: CHECK (((calibration_result)::text = ANY ((ARRAY['Successful'::character varying, 'Failed'::character varying, 'Requires Further Testing'::character varying])::text[])))
+  sensorcalibrationhistory_pkey: PRIMARY KEY (calibration_id)
+  sensorcalibrationhistory_sensor_id_fkey: FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id)
+  sensorcalibrationhistory_technician_id_fkey: FOREIGN KEY (technician_id) REFERENCES employee(employee_id)
+
+Indexes:
+  sensorcalibrationhistory_pkey: CREATE UNIQUE INDEX sensorcalibrationhistory_pkey ON public.sensorcalibrationhistory USING btree (calibration_id)
+
+==================================================
+
+Table: userfavoritelocations
+Columns:
+  favorite_id: integer  DEFAULT nextval('userfavoritelocations_favorite_id_seq'::regclass)
+  user_id: integer  
+  city_id: integer NULL 
+  station_id: integer NULL 
+  added_at: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+
+Constraints:
+  userfavoritelocations_check: CHECK ((((city_id IS NOT NULL) AND (station_id IS NULL)) OR ((city_id IS NULL) AND (station_id IS NOT NULL))))
+  userfavoritelocations_city_id_fkey: FOREIGN KEY (city_id) REFERENCES city(city_id)
+  userfavoritelocations_pkey: PRIMARY KEY (favorite_id)
+  userfavoritelocations_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  userfavoritelocations_user_id_city_id_key: UNIQUE (user_id, city_id)
+  userfavoritelocations_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+  userfavoritelocations_user_id_station_id_key: UNIQUE (user_id, station_id)
+
+Indexes:
+  userfavoritelocations_pkey: CREATE UNIQUE INDEX userfavoritelocations_pkey ON public.userfavoritelocations USING btree (favorite_id)
+  userfavoritelocations_user_id_city_id_key: CREATE UNIQUE INDEX userfavoritelocations_user_id_city_id_key ON public.userfavoritelocations USING btree (user_id, city_id)
+  userfavoritelocations_user_id_station_id_key: CREATE UNIQUE INDEX userfavoritelocations_user_id_station_id_key ON public.userfavoritelocations USING btree (user_id, station_id)
+
+==================================================
+
+Table: userhistoryrecentviews
+Columns:
+  view_id: integer  DEFAULT nextval('userhistoryrecentviews_view_id_seq'::regclass)
+  user_id: integer  
+  city_id: integer  
+  viewed_at: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+
+Constraints:
+  userhistoryrecentviews_city_id_fkey: FOREIGN KEY (city_id) REFERENCES city(city_id)
+  userhistoryrecentviews_pkey: PRIMARY KEY (view_id)
+  userhistoryrecentviews_user_id_city_id_viewed_at_key: UNIQUE (user_id, city_id, viewed_at)
+  userhistoryrecentviews_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+
+Indexes:
+  userhistoryrecentviews_pkey: CREATE UNIQUE INDEX userhistoryrecentviews_pkey ON public.userhistoryrecentviews USING btree (view_id)
+  userhistoryrecentviews_user_id_city_id_viewed_at_key: CREATE UNIQUE INDEX userhistoryrecentviews_user_id_city_id_viewed_at_key ON public.userhistoryrecentviews USING btree (user_id, city_id, viewed_at)
+
+==================================================
+
+Table: userhomelocation
+Columns:
+  favorite_id: integer  DEFAULT nextval('userhomelocation_favorite_id_seq'::regclass)
+  user_id: integer  
+  city_id: integer NULL 
+  station_id: integer NULL 
+  latitude: numeric NULL 
+  longitude: numeric NULL 
+
+Constraints:
+  userhomelocation_check: CHECK ((((city_id IS NOT NULL) AND (station_id IS NULL) AND (latitude IS NULL) AND (longitude IS NULL)) OR ((city_id IS NULL) AND (station_id IS NOT NULL) AND (latitude IS NULL) AND (longitude IS NULL)) OR ((city_id IS NULL) AND (station_id IS NULL) AND (latitude IS NOT NULL) AND (longitude IS NOT NULL))))
+  userhomelocation_city_id_fkey: FOREIGN KEY (city_id) REFERENCES city(city_id)
+  userhomelocation_pkey: PRIMARY KEY (favorite_id)
+  userhomelocation_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  userhomelocation_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+  userhomelocation_user_id_key: UNIQUE (user_id)
+
+Indexes:
+  userhomelocation_pkey: CREATE UNIQUE INDEX userhomelocation_pkey ON public.userhomelocation USING btree (favorite_id)
+  userhomelocation_user_id_key: CREATE UNIQUE INDEX userhomelocation_user_id_key ON public.userhomelocation USING btree (user_id)
+
+==================================================
+
+Table: usernotificationpreferences
+Columns:
+  preference_id: integer  DEFAULT nextval('usernotificationpreferences_preference_id_seq'::regclass)
+  user_id: integer  
+  weather_characteristic: character varying  
+  notification_method: character varying  
+  threshold_level: character varying  
+
+Constraints:
+  usernotificationpreferences_notification_method_check: CHECK (((notification_method)::text = ANY ((ARRAY['Email'::character varying, 'SMS'::character varying, 'Push'::character varying])::text[])))
+  usernotificationpreferences_pkey: PRIMARY KEY (preference_id)
+  usernotificationpreferences_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+  usernotificationpreferences_user_id_weather_characteristic__key: UNIQUE (user_id, weather_characteristic, notification_method)
+  usernotificationpreferences_weather_characteristic_check: CHECK (((weather_characteristic)::text = ANY ((ARRAY['Temperature'::character varying, 'Humidity'::character varying, 'Pressure'::character varying, 'Wind Speed'::character varying, 'Precipitation'::character varying, 'UV Index'::character varying, 'Pollen Concentration'::character varying, 'Geomagnetic Activity'::character varying, 'AQI'::character varying])::text[])))
+
+Indexes:
+  usernotificationpreferences_pkey: CREATE UNIQUE INDEX usernotificationpreferences_pkey ON public.usernotificationpreferences USING btree (preference_id)
+  usernotificationpreferences_user_id_weather_characteristic__key: CREATE UNIQUE INDEX usernotificationpreferences_user_id_weather_characteristic__key ON public.usernotificationpreferences USING btree (user_id, weather_characteristic, notification_method)
+
+==================================================
+
+Table: userpollenpreferences
+Columns:
+  preference_id: integer  DEFAULT nextval('userpollenpreferences_preference_id_seq'::regclass)
+  user_id: integer  
+  plant_name: character varying  
+  notification_threshold: numeric  
+  notify_on_decrease: boolean  
+
+Constraints:
+  userpollenpreferences_pkey: PRIMARY KEY (preference_id)
+  userpollenpreferences_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+  userpollenpreferences_user_id_plant_name_key: UNIQUE (user_id, plant_name)
+
+Indexes:
+  userpollenpreferences_pkey: CREATE UNIQUE INDEX userpollenpreferences_pkey ON public.userpollenpreferences USING btree (preference_id)
+  userpollenpreferences_user_id_plant_name_key: CREATE UNIQUE INDEX userpollenpreferences_user_id_plant_name_key ON public.userpollenpreferences USING btree (user_id, plant_name)
+
+==================================================
+
+Table: users
+Columns:
+  user_id: integer  DEFAULT nextval('users_user_id_seq'::regclass)
+  first_name: character varying  
+  last_name: character varying  
+  email: character varying  
+  phone: character varying NULL 
+  password_hash: text  
+
+Constraints:
+  users_email_key: UNIQUE (email)
+  users_pkey: PRIMARY KEY (user_id)
+
+Indexes:
+  users_pkey: CREATE UNIQUE INDEX users_pkey ON public.users USING btree (user_id)
+  users_email_key: CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email)
+
+==================================================
+
+Table: userunitssettings
+Columns:
+  settings_id: integer  DEFAULT nextval('userunitssettings_settings_id_seq'::regclass)
+  user_id: integer  
+  temperature_unit: character varying  
+  precipitation_unit: character varying  
+  wind_speed_unit: character varying  
+  pressure_unit: character varying  
+  visibility_unit: character varying  
+  update_frequency_in_minutes: integer  
+
+Constraints:
+  userunitssettings_pkey: PRIMARY KEY (settings_id)
+  userunitssettings_precipitation_unit_check: CHECK (((precipitation_unit)::text = ANY ((ARRAY['mm (rain), cm (snow)'::character varying, 'inches'::character varying])::text[])))
+  userunitssettings_pressure_unit_check: CHECK (((pressure_unit)::text = ANY ((ARRAY['mm_of_mercury'::character varying, 'inches_of_mercury'::character varying, 'mbar'::character varying, 'gPa'::character varying])::text[])))
+  userunitssettings_temperature_unit_check: CHECK (((temperature_unit)::text = ANY ((ARRAY['Celsius'::character varying, 'Fahrenheit'::character varying])::text[])))
+  userunitssettings_update_frequency_in_minutes_check: CHECK ((update_frequency_in_minutes > 0))
+  userunitssettings_user_id_fkey: FOREIGN KEY (user_id) REFERENCES users(user_id)
+  userunitssettings_user_id_key: UNIQUE (user_id)
+  userunitssettings_visibility_unit_check: CHECK (((visibility_unit)::text = ANY ((ARRAY['km'::character varying, 'miles'::character varying])::text[])))
+  userunitssettings_wind_speed_unit_check: CHECK (((wind_speed_unit)::text = ANY ((ARRAY['m/s'::character varying, 'km/h'::character varying, 'mph'::character varying, 'knots'::character varying, 'Beaufort points'::character varying])::text[])))
+
+Indexes:
+  userunitssettings_pkey: CREATE UNIQUE INDEX userunitssettings_pkey ON public.userunitssettings USING btree (settings_id)
+  userunitssettings_user_id_key: CREATE UNIQUE INDEX userunitssettings_user_id_key ON public.userunitssettings USING btree (user_id)
+
+==================================================
+
+Table: weathermeasurement
+Columns:
+  measurement_id: integer  DEFAULT nextval('weathermeasurement_measurement_id_seq'::regclass)
+  station_id: integer  
+  timestamp: timestamp without time zone  DEFAULT CURRENT_TIMESTAMP
+  temperature: numeric  
+  dew_point_temperature: numeric  
+  humidity: numeric  
+  pressure: numeric  
+  wind_speed: numeric  
+  wind_direction: character varying  
+  wind_direction_degrees: numeric  
+  wind_gusts_speed: numeric  
+  precipitation_mm: numeric  
+  precipitation_type: character varying  
+  uv_index: numeric  
+  visibility: numeric  
+  geomagnetic_activity: numeric  
+  sunrise_time: time without time zone  
+  sunset_time: time without time zone  
+  aqi: numeric  
+  moon_phase: character varying  
+
+Constraints:
+  weathermeasurement_moon_phase_check: CHECK (((moon_phase)::text = ANY ((ARRAY['Full Moon'::character varying, 'New Moon'::character varying, 'First Quarter'::character varying, 'Last Quarter'::character varying, 'Growing Sickle'::character varying, 'Growing Moon'::character varying, 'Waning Moon'::character varying, 'Waning Sickle'::character varying])::text[])))
+  weathermeasurement_pkey: PRIMARY KEY (measurement_id)
+  weathermeasurement_precipitation_type_check: CHECK (((precipitation_type)::text = ANY ((ARRAY['Rain'::character varying, 'Snow'::character varying, 'Hail'::character varying, 'Sleet'::character varying, 'None'::character varying])::text[])))
+  weathermeasurement_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  weathermeasurement_station_id_timestamp_key: UNIQUE (station_id, "timestamp")
+  weathermeasurement_wind_direction_check: CHECK (((wind_direction)::text = ANY ((ARRAY['N'::character varying, 'S'::character varying, 'W'::character varying, 'E'::character varying, 'NW'::character varying, 'SW'::character varying, 'SE'::character varying, 'NE'::character varying])::text[])))
+
+Indexes:
+  weathermeasurement_pkey: CREATE UNIQUE INDEX weathermeasurement_pkey ON public.weathermeasurement USING btree (measurement_id)
+  weathermeasurement_station_id_timestamp_key: CREATE UNIQUE INDEX weathermeasurement_station_id_timestamp_key ON public.weathermeasurement USING btree (station_id, "timestamp")
+
+==================================================
+
+Table: weatherstation
+Columns:
+  station_id: integer  DEFAULT nextval('weatherstation_station_id_seq'::regclass)
+  city_id: integer  
+  latitude: numeric  
+  longitude: numeric  
+  altitude_above_sea_level_in_metres: numeric  
+  manufacturer: character varying  
+  model: character varying  
+  release_date: date  
+  commissioning_date: date  
+  last_maintenance: date NULL 
+  status: character varying  
+
+Constraints:
+  weatherstation_city_id_fkey: FOREIGN KEY (city_id) REFERENCES city(city_id)
+  weatherstation_city_id_latitude_longitude_key: UNIQUE (city_id, latitude, longitude)
+  weatherstation_pkey: PRIMARY KEY (station_id)
+  weatherstation_status_check: CHECK (((status)::text = ANY ((ARRAY['Active'::character varying, 'Inactive'::character varying, 'Under Maintenance'::character varying])::text[])))
+
+Indexes:
+  weatherstation_pkey: CREATE UNIQUE INDEX weatherstation_pkey ON public.weatherstation USING btree (station_id)
+  weatherstation_city_id_latitude_longitude_key: CREATE UNIQUE INDEX weatherstation_city_id_latitude_longitude_key ON public.weatherstation USING btree (city_id, latitude, longitude)
+
+==================================================
+
+Table: weatherstationmaintenance
+Columns:
+  maintenance_id: integer  DEFAULT nextval('weatherstationmaintenance_maintenance_id_seq'::regclass)
+  station_id: integer  
+  maintenance_date: date  
+  technician_id: integer  
+  description: text  
+  status_after: character varying  
+
+Constraints:
+  weatherstationmaintenance_pkey: PRIMARY KEY (maintenance_id)
+  weatherstationmaintenance_station_id_fkey: FOREIGN KEY (station_id) REFERENCES weatherstation(station_id)
+  weatherstationmaintenance_station_id_maintenance_date_key: UNIQUE (station_id, maintenance_date)
+  weatherstationmaintenance_status_after_check: CHECK (((status_after)::text = ANY ((ARRAY['Operational'::character varying, 'Requires Repair'::character varying, 'Decommissioned'::character varying])::text[])))
+  weatherstationmaintenance_technician_id_fkey: FOREIGN KEY (technician_id) REFERENCES employee(employee_id)
+
+Indexes:
+  weatherstationmaintenance_pkey: CREATE UNIQUE INDEX weatherstationmaintenance_pkey ON public.weatherstationmaintenance USING btree (maintenance_id)
+  weatherstationmaintenance_station_id_maintenance_date_key: CREATE UNIQUE INDEX weatherstationmaintenance_station_id_maintenance_date_key ON public.weatherstationmaintenance USING btree (station_id, maintenance_date)
+
+==================================================
+

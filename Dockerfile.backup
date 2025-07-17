@@ -1,0 +1,14 @@
+FROM alpine:3.19
+
+RUN apk add --no-cache postgresql-client bash busybox-suid
+
+COPY /backup/pg_backup.sh /usr/local/bin/pg_backup.sh
+COPY /backup/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/pg_backup.sh /usr/local/bin/entrypoint.sh
+
+USER root
+
+VOLUME ["/backups"]
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

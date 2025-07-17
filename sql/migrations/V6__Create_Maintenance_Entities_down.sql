@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS Employee CASCADE;
+DROP TABLE IF EXISTS WeatherStationMaintenance CASCADE;
+DROP TABLE IF EXISTS SensorCalibrationHistory CASCADE;

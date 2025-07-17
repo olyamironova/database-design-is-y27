@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS UserWeatherQuestionnaire CASCADE;
+DROP TABLE IF EXISTS NaturalDisasterAlert CASCADE;

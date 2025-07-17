@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS UserNotificationPreferences CASCADE;
+DROP TABLE IF EXISTS Notification CASCADE;

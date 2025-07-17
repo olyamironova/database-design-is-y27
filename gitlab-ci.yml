@@ -1,0 +1,28 @@
+stages:
+  - test
+
+variables:
+  POSTGRES_DB: postgres
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  DB_HOST: postgres
+  DB_PORT: 5432
+
+test_migrations:
+  stage: test
+  image: python:3.11
+  services:
+    - name: postgres:15
+      alias: postgres
+  before_script:
+    - apt-get update && apt-get install -y libpq-dev gcc
+    - pip install psycopg2
+    - mkdir -p /test-results
+  script:
+    - python test_migrations.py
+  artifacts:
+    when: always
+    paths:
+      - test-results/
+    reports:
+      junit: test-results/*.xml

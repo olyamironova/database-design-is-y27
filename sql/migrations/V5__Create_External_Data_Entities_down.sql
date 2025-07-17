@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS ExternalDataSource CASCADE;
+DROP TABLE IF EXISTS ExternalWeatherData CASCADE;

@@ -1,0 +1,51 @@
+Table: city
+Columns:
+  city_id: integer  DEFAULT nextval('city_city_id_seq'::regclass)
+  name: character varying  
+  region_id: integer  
+  latitude: numeric  
+  longitude: numeric  
+
+Constraints:
+  city_name_region_id_key: UNIQUE (name, region_id)
+  city_pkey: PRIMARY KEY (city_id)
+  city_region_id_fkey: FOREIGN KEY (region_id) REFERENCES region(region_id)
+
+Indexes:
+  city_pkey: CREATE UNIQUE INDEX city_pkey ON public.city USING btree (city_id)
+  city_name_region_id_key: CREATE UNIQUE INDEX city_name_region_id_key ON public.city USING btree (name, region_id)
+
+==================================================
+
+Table: country
+Columns:
+  country_id: integer  DEFAULT nextval('country_country_id_seq'::regclass)
+  country_name: character varying  
+
+Constraints:
+  country_country_name_key: UNIQUE (country_name)
+  country_pkey: PRIMARY KEY (country_id)
+
+Indexes:
+  country_pkey: CREATE UNIQUE INDEX country_pkey ON public.country USING btree (country_id)
+  country_country_name_key: CREATE UNIQUE INDEX country_country_name_key ON public.country USING btree (country_name)
+
+==================================================
+
+Table: region
+Columns:
+  region_id: integer  DEFAULT nextval('region_region_id_seq'::regclass)
+  region_name: character varying  
+  country_id: integer  
+
+Constraints:
+  region_country_id_fkey: FOREIGN KEY (country_id) REFERENCES country(country_id)
+  region_pkey: PRIMARY KEY (region_id)
+  region_region_name_key: UNIQUE (region_name)
+
+Indexes:
+  region_pkey: CREATE UNIQUE INDEX region_pkey ON public.region USING btree (region_id)
+  region_region_name_key: CREATE UNIQUE INDEX region_region_name_key ON public.region USING btree (region_name)
+
+==================================================
+

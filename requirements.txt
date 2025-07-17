@@ -1,0 +1,4 @@
+psycopg2-binary>=2.9.0
+prometheus-client==0.20.0
+faker>=15.0.0
+python-dotenv

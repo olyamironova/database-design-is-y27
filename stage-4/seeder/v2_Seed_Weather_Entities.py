@@ -1,0 +1,10 @@
+def seed_v2(seeder):
+    print(">> Running V2 seed...")
+    list(seeder.seed_countries())
+    list(seeder.seed_regions())
+    list(seeder.seed_cities())
+    list(seeder.seed_weather_stations())
+    list(seeder.seed_sensors())
+    list(seeder.seed_weather_measurements())
+    seeder.seed_health_risk_levels()
+    list(seeder.seed_monthly_weather_statistics())
